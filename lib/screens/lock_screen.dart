@@ -17,7 +17,9 @@ class _LockScreenState extends State<LockScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _tryAuth();
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) _tryAuth();
+        });
       }
     });
   }

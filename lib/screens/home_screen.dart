@@ -9,6 +9,7 @@ import 'package:pass_keeper/models/password_group_model.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:pass_keeper/helpers/crypto_helper.dart';
 import 'package:pass_keeper/services/auth_service.dart';
+import 'package:pass_keeper/services/password_repository.dart';
 
 enum _ImportExportAction { importJson, exportJson }
 
@@ -23,13 +24,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // If app isn't unlocked, redirect to lock screen
     if (!AuthService.instance.isUnlocked) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/lock');
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (AuthService.instance.isUnlocked) {
+        await _loadFromStorage();
+      }
+    });
   }
 
   final List<PasswordGroupModel> passwordGroups = [
@@ -67,7 +73,59 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     ),
   ];
+
   List<String> get groups => passwordGroups.map((g) => g.name).toList();
+
+  // Storage helpers
+  Future<void> _loadFromStorage() async {
+    try {
+      final raw = await PasswordRepository.instance.loadRaw();
+      if (raw == null) {
+        return;
+      }
+      final loadedGroups = raw.map((g) {
+        final name = (g['name'] ?? 'Other').toString();
+        final itemsJson = (g['items'] as List<dynamic>? ?? []);
+        final items = itemsJson
+            .map((it) => PasswordModel.fromJson(it as Map<String, dynamic>))
+            .toList();
+        return PasswordGroupModel(
+          name: name,
+          icon: _getIconByName(name),
+          items: items,
+        );
+      }).toList();
+      setState(() {
+        passwordGroups
+          ..clear()
+          ..addAll(loadedGroups);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load saved passwords: $e')),
+      );
+    }
+  }
+
+  Future<void> _saveToStorage() async {
+    try {
+      final data = passwordGroups
+          .map(
+            (g) => {
+              'name': g.name,
+              'items': g.items.map((it) => it.toJson()).toList(),
+            },
+          )
+          .toList();
+      await PasswordRepository.instance.saveRaw(data);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+    }
+  }
 
   String searchQuery = '';
   Timer? _searchDebounce;
@@ -144,6 +202,29 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _addPasswordToGroup(PasswordModel passwordItem, String groupName) {
+    setState(() {
+      final groupIndex = passwordGroups.indexWhere((g) => g.name == groupName);
+      if (groupIndex != -1) {
+        passwordGroups[groupIndex].items.add(passwordItem);
+      } else {
+        final newGroup = PasswordGroupModel(
+          name: groupName,
+          icon: _getIconByName(groupName),
+          items: [passwordItem],
+        );
+        passwordGroups.add(newGroup);
+      }
+    });
+    unawaited(_saveToStorage());
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Pass has been created successfully!'),
+        backgroundColor: Colors.lightGreenAccent,
+      ),
+    );
+  }
+
   void handleEditPasswordItem(
     PasswordModel passwordItem,
     String currentGroupName,
@@ -179,28 +260,6 @@ class _HomeScreenState extends State<HomeScreen> {
         newGroupName,
       );
     }
-  }
-
-  void _addPasswordToGroup(PasswordModel passwordItem, String groupName) {
-    setState(() {
-      final groupIndex = passwordGroups.indexWhere((g) => g.name == groupName);
-      if (groupIndex != -1) {
-        passwordGroups[groupIndex].items.add(passwordItem);
-      } else {
-        final newGroup = PasswordGroupModel(
-          name: groupName,
-          icon: _getIconByName(groupName),
-          items: [passwordItem],
-        );
-        passwordGroups.add(newGroup);
-      }
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Pass has been created successfully!'),
-        backgroundColor: Colors.lightGreenAccent,
-      ),
-    );
   }
 
   void _updatePasswordItem(
@@ -273,6 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
         passwordGroups.add(newGroup);
       }
     });
+    unawaited(_saveToStorage());
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Pass has been updated successfully!'),
@@ -314,6 +374,7 @@ class _HomeScreenState extends State<HomeScreen> {
         passwordGroups.removeAt(groupIndex);
       }
     });
+    unawaited(_saveToStorage());
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Pass has been deleted successfully!'),
@@ -484,6 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ..clear()
           ..addAll(imported);
       });
+      await _saveToStorage();
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
