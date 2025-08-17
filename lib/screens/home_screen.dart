@@ -38,41 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  final List<PasswordGroupModel> passwordGroups = [
-    PasswordGroupModel(
-      name: 'Mail',
-      icon: Icons.mail,
-      items: [
-        PasswordModel(
-          name: "vlad1",
-          login: "lavyshvlad1@gmail.com",
-          password: "somePassword123",
-        ),
-      ],
-    ),
-    PasswordGroupModel(
-      name: 'Work',
-      icon: Icons.work,
-      items: [
-        PasswordModel(
-          name: "vlad1",
-          login: "lavyshvlad1@gmail.com",
-          password: "somePassword123",
-        ),
-      ],
-    ),
-    PasswordGroupModel(
-      name: 'Other',
-      icon: Icons.folder,
-      items: [
-        PasswordModel(
-          name: "cloud",
-          login: "someTesh@gmail.com",
-          password: "fff123somePasswor",
-        ),
-      ],
-    ),
-  ];
+  final List<PasswordGroupModel> passwordGroups = [];
 
   List<String> get groups => passwordGroups.map((g) => g.name).toList();
 
@@ -567,7 +533,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : passwordGroups
               .map((g) {
                 final filtered = g.items
-                    .where((it) => it.login.toLowerCase().contains(q))
+                    .where((it) => it.name.toLowerCase().contains(q))
                     .toList();
                 if (filtered.isEmpty) return null;
                 return PasswordGroupModel(
@@ -647,7 +613,7 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration:
                   const InputDecoration(
                     border: UnderlineInputBorder(),
-                    hintText: 'Search by Login...',
+                    hintText: 'Search by name...',
                     hintStyle: TextStyle(color: Colors.grey),
                   ).copyWith(
                     suffixIcon: (_searchController.text.isEmpty)
@@ -669,11 +635,29 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             Expanded(
-              child: PasswordList(
-                items: displayedGroups,
-                onPasswordTap: handleEditPasswordItem,
-                expandAll: q.isNotEmpty,
-              ),
+              child: (q.isNotEmpty && displayedGroups.isEmpty)
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.search_off, size: 64, color: Colors.grey),
+                          SizedBox(height: 12),
+                          Text(
+                            'No items found',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : PasswordList(
+                      items: displayedGroups,
+                      onPasswordTap: handleEditPasswordItem,
+                      expandAll: q.isNotEmpty,
+                    ),
             ),
           ],
         ),

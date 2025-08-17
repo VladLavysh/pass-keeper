@@ -15,7 +15,7 @@ class PasswordModel {
     String? name,
     String? login,
     String? password,
-    String? notes = '',
+    String? notes,
   }) {
     return PasswordModel(
       name: name ?? this.name,
@@ -26,11 +26,11 @@ class PasswordModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'login': login,
-        'password': password,
-        if (notes != null) 'notes': notes,
-      };
+    'name': name,
+    'login': login,
+    'password': password,
+    if (notes != null) 'notes': notes,
+  };
 
   factory PasswordModel.fromJson(Map<String, dynamic> json) {
     return PasswordModel(

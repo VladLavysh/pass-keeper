@@ -92,7 +92,9 @@ class _InputState extends State<Input> {
             maxLines: widget.isTextArea ? 4 : 1,
             decoration: InputDecoration(
               border: const UnderlineInputBorder(),
-              hintText: widget.placeholder,
+              labelText: widget.placeholder,
+              floatingLabelBehavior: FloatingLabelBehavior.auto,
+              hintText: null,
               hintStyle: const TextStyle(color: Colors.grey),
               errorText: widget.errorText,
             ),

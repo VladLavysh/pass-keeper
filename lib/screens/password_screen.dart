@@ -144,8 +144,10 @@ class _PasswordScreenState extends State<PasswordScreen> {
       TextField(
         controller: _groupController,
         decoration: InputDecoration(
-          hintText: 'Group (type to search or create new)',
-          hintStyle: const TextStyle(color: Colors.grey),
+          labelText: 'Group',
+          floatingLabelBehavior: FloatingLabelBehavior.auto,
+          helperText: 'Type to search or create new',
+          helperStyle: const TextStyle(color: Colors.grey),
           border: const UnderlineInputBorder(),
           errorText: _groupError,
           suffixIcon: _showSuggestions

@@ -15,7 +15,7 @@ class PasswordItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         margin: EdgeInsets.symmetric(vertical: 3),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
@@ -33,26 +33,11 @@ class PasswordItem extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.person, size: 18, color: Colors.grey[400]),
+                      Icon(Icons.person_2, size: 18, color: Colors.grey[400]),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          passwordItem.login,
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.lock, size: 18, color: Colors.grey[400]),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '•' * passwordItem.password.length,
+                          passwordItem.name,
                           style: TextStyle(fontSize: 16, color: Colors.white),
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
